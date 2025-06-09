@@ -1,0 +1,32 @@
+# Build directories
+build/
+cmake-build-*/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Compiled binaries
+*.exe
+*.out
+*.app
+particle_simulation
+
+# Object files
+*.o
+*.obj
+
+# CMake files (if generated in source)
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# macOS
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
