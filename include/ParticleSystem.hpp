@@ -9,14 +9,20 @@ class ParticleSystem {
     std::vector<Particle> particles;
     sf::Vector2f emitterPosition;
     float emissionTime;
+    float gravityDirection;
+
+    sf::Vector2f boundaryCenter;
+    float boundaryRadius;
 
   public:
-    ParticleSystem(sf::Vector2f position);
+    ParticleSystem(sf::Vector2f position, sf::Vector2f boundaryCenter, float boundaryRadius);
 
     void update(float dt);
     void render(sf::RenderTarget& target);
     void emit(int particleCount);
     void setEmitterPosition(const sf::Vector2f& position);
+    void renderBoundary(sf::RenderTarget& target);
+    void setGravityDirection(float angle);
 
     size_t getParticleCount() const;
 };

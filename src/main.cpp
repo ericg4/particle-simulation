@@ -10,7 +10,10 @@ int main()
   sf::RenderWindow window(sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "Particle Simulation");
   window.setFramerateLimit(60);
 
-  ParticleSystem particleSystem(sf::Vector2f(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2));
+  sf::Vector2f center(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+  float boundaryRadius = 350.0f;
+
+  ParticleSystem particleSystem(sf::Vector2f(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2), center, boundaryRadius);
 
   sf::Clock clock;
 
@@ -63,6 +66,18 @@ int main()
       {
         window.close();
       }
+
+      if (event->is<sf::Event::KeyPressed>()) {
+        if (event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Up) {
+          particleSystem.setGravityDirection(270.0f);
+        } else if (event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Down) {
+          particleSystem.setGravityDirection(90.0f);
+        } else if (event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Left) {
+          particleSystem.setGravityDirection(180.0f);
+        } else if (event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Right) {
+          particleSystem.setGravityDirection(0.0f);
+        }
+      }
     }
 
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
@@ -86,6 +101,7 @@ int main()
 
     window.clear(sf::Color::Black);
     particleSystem.render(window);
+    particleSystem.renderBoundary(window);
 
     window.draw(fpsText);
     window.draw(frameTimeText);

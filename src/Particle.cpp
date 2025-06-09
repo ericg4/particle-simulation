@@ -1,7 +1,7 @@
 #include "../include/Particle.hpp"
 
 Particle::Particle(const sf::Vector2f &pos, const sf::Vector2f &vel, const sf::Color &col, float r)
-    : position(pos), velocity(vel), acceleration(0.0f, 0.0f), color(col), radius(r), mass(3.14f*r*r), drag(0.98f)
+    : position(pos), velocity(vel), acceleration(0.0f, 0.0f), color(col), radius(r), mass(3.14f*r*r), drag(0.993f)
 {
 }
 
