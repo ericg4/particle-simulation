@@ -8,8 +8,7 @@ constexpr float PI = 3.14159265358979323846f;
 const float GRAVITY_STRENGTH = 350.0f; // pixels / second^2
 const float DEG_TO_RAD = 3.14159265f / 180.0f;
 
-sf::Color hsvToRgb(float h, float s, float v)
-{
+sf::Color hsvToRgb(float h, float s, float v) {
   float c = v * s;
   float x = c * (1.0f - std::abs(std::fmod(h / 60.0f, 2.0f) - 1.0f));
   float m = v - c;
@@ -54,22 +53,22 @@ sf::Color hsvToRgb(float h, float s, float v)
   }
 
   return sf::Color(
-      static_cast<unsigned char>((r + m) * 255),
-      static_cast<unsigned char>((g + m) * 255),
-      static_cast<unsigned char>((b + m) * 255));
+    static_cast<unsigned char>((r + m) * 255),
+    static_cast<unsigned char>((g + m) * 255),
+    static_cast<unsigned char>((b + m) * 255));
 }
 
 ParticleSystem::ParticleSystem(sf::Vector2f position, sf::Vector2f center, float radius)
-    : emitterPosition(position), emissionTime(0.0f), boundaryCenter(center), boundaryRadius(radius), gravityDirection(90.0f) {}
+  : emitterPosition(position), emissionTime(0.0f), boundaryCenter(center), boundaryRadius(radius), gravityDirection(90.0f) {
+}
 
-void ParticleSystem::update(float dt)
-{
+void ParticleSystem::update(float dt) {
   emissionTime += dt;
 
   sf::Vector2f gravityForce(std::cos(gravityDirection * DEG_TO_RAD) * GRAVITY_STRENGTH,
-                            std::sin(gravityDirection * DEG_TO_RAD) * GRAVITY_STRENGTH);
+    std::sin(gravityDirection * DEG_TO_RAD) * GRAVITY_STRENGTH);
 
-  for (auto &particle : particles)
+  for (auto& particle : particles)
   {
     particle.applyForce(gravityForce * particle.getMass());
     particle.update(dt);
@@ -93,16 +92,14 @@ void ParticleSystem::update(float dt)
   }
 }
 
-void ParticleSystem::render(sf::RenderTarget &target)
-{
-  for (auto &particle : particles)
+void ParticleSystem::render(sf::RenderTarget& target) {
+  for (auto& particle : particles)
   {
     particle.render(target);
   }
 }
 
-void ParticleSystem::renderBoundary(sf::RenderTarget &target)
-{
+void ParticleSystem::renderBoundary(sf::RenderTarget& target) {
   sf::CircleShape boundaryCircle(boundaryRadius);
   boundaryCircle.setPosition(boundaryCenter - sf::Vector2f(boundaryRadius, boundaryRadius));
   boundaryCircle.setFillColor(sf::Color(0, 0, 0, 0));
@@ -111,8 +108,7 @@ void ParticleSystem::renderBoundary(sf::RenderTarget &target)
   target.draw(boundaryCircle);
 }
 
-void ParticleSystem::emit(int particleCount)
-{
+void ParticleSystem::emit(int particleCount) {
   float speed = 150.0f;
 
   float minAngle = 1.0f * PI / 6.0f;
@@ -127,8 +123,8 @@ void ParticleSystem::emit(int particleCount)
     float angle = baseAngle;
 
     sf::Vector2f velocity(
-        std::cos(angle) * speed,
-        std::sin(angle) * speed);
+      std::cos(angle) * speed,
+      std::sin(angle) * speed);
 
     float hue = std::fmod(emissionTime * 60.0f, 360.0f);
     sf::Color color = hsvToRgb(hue, 1.0f, 1.0f);
@@ -137,13 +133,11 @@ void ParticleSystem::emit(int particleCount)
   }
 }
 
-void ParticleSystem::setEmitterPosition(const sf::Vector2f &position)
-{
+void ParticleSystem::setEmitterPosition(const sf::Vector2f& position) {
   emitterPosition = position;
 }
 
-size_t ParticleSystem::getParticleCount() const
-{
+size_t ParticleSystem::getParticleCount() const {
   return particles.size();
 }
 

@@ -30,3 +30,5 @@ Makefile
 # Temporary files
 *.tmp
 *.temp
+
+.editorconfig

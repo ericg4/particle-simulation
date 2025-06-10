@@ -2,12 +2,11 @@
 #include <iostream>
 #include "../include/ParticleSystem.hpp"
 
-int main()
-{
+int main() {
   const unsigned int WINDOW_WIDTH = 1200;
   const unsigned int WINDOW_HEIGHT = 800;
 
-  sf::RenderWindow window(sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "Particle Simulation");
+  sf::RenderWindow window(sf::VideoMode({ WINDOW_WIDTH, WINDOW_HEIGHT }), "Particle Simulation");
   window.setFramerateLimit(60);
 
   sf::Vector2f center(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
@@ -61,8 +60,8 @@ int main()
     while (auto event = window.pollEvent())
     {
       if (event->is<sf::Event::Closed>() ||
-          (event->is<sf::Event::KeyPressed>() &&
-           event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Escape))
+        (event->is<sf::Event::KeyPressed>() &&
+          event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Escape))
       {
         window.close();
       }
@@ -70,11 +69,14 @@ int main()
       if (event->is<sf::Event::KeyPressed>()) {
         if (event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Up) {
           particleSystem.setGravityDirection(270.0f);
-        } else if (event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Down) {
+        }
+        else if (event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Down) {
           particleSystem.setGravityDirection(90.0f);
-        } else if (event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Left) {
+        }
+        else if (event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Left) {
           particleSystem.setGravityDirection(180.0f);
-        } else if (event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Right) {
+        }
+        else if (event->getIf<sf::Event::KeyPressed>()->code == sf::Keyboard::Key::Right) {
           particleSystem.setGravityDirection(0.0f);
         }
       }
