@@ -1,6 +1,6 @@
-#define _USE_MATH_DEFINES
 #include "../include/ParticleSystem.hpp"
 #include "../include/utils/color.hpp"
+#include "../include/utils/math.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -26,7 +26,7 @@ void ParticleSystem::update(float dt) {
 
     sf::Vector2f particlePos = particle.getPosition();
     sf::Vector2f toParticle = particlePos - boundaryCenter;
-    float distance = std::sqrt(toParticle.x * toParticle.x + toParticle.y * toParticle.y);
+    float distance = utils::calcDistance(particlePos, boundaryCenter);
 
     if (distance > boundaryRadius - particle.getRadius())
     {
@@ -36,11 +36,13 @@ void ParticleSystem::update(float dt) {
       particle.setPosition(newPos);
 
       sf::Vector2f vel = particle.getVelocity();
-      float dotProduct = vel.x * normal.x + vel.y * normal.y;
+      float dotProduct = utils::dot(vel, normal);
       sf::Vector2f reflection = vel - 2.0f * dotProduct * normal;
       particle.setVelocity(reflection);
     }
   }
+
+  handleParticleCollisions();
 }
 
 void ParticleSystem::render(sf::RenderTarget& target) {
@@ -57,6 +59,71 @@ void ParticleSystem::renderBoundary(sf::RenderTarget& target) {
   boundaryCircle.setOutlineColor(sf::Color(255, 255, 255, 128));
   boundaryCircle.setOutlineThickness(2.0f);
   target.draw(boundaryCircle);
+}
+
+bool ParticleSystem::checkCollision(const Particle& particle1, const Particle& particle2) {
+  sf::Vector2f pos1 = particle1.getPosition();
+  sf::Vector2f pos2 = particle2.getPosition();
+
+  float distance = utils::calcDistance(pos1, pos2);
+  float collisionDistance = particle1.getRadius() + particle2.getRadius();
+
+  return distance < collisionDistance; // Use < instead of <= for cleaner detection
+}
+
+void ParticleSystem::resolveCollision(Particle& particle1, Particle& particle2) {
+  sf::Vector2f pos1 = particle1.getPosition();
+  sf::Vector2f pos2 = particle2.getPosition();
+  sf::Vector2f vel1 = particle1.getVelocity();
+  sf::Vector2f vel2 = particle2.getVelocity();
+  float m1 = particle1.getMass();
+  float m2 = particle2.getMass();
+  float r1 = particle1.getRadius();
+  float r2 = particle2.getRadius();
+
+  sf::Vector2f delta = pos2 - pos1;
+  float distance = utils::calcLengthOfVector(delta);
+
+  // Prevent division by zero and handle particles at same position
+  if (distance < 0.001f) {
+    // Create artificial separation for particles at same position
+    delta = sf::Vector2f(1.0f, 0.0f);
+    distance = 0.001f;
+  }
+
+  sf::Vector2f unit_normal = delta / distance;
+  sf::Vector2f tangent = sf::Vector2f(-unit_normal.y, unit_normal.x);
+
+  float overlap = (r1 + r2) - distance;
+
+  // **CRITICAL: Separate overlapping particles**
+  if (overlap > 0.0f) {
+    sf::Vector2f separation = unit_normal * (overlap * 0.5f);
+    particle1.setPosition(pos1 - separation);
+    particle2.setPosition(pos2 + separation);
+  }
+  float v1n = utils::dot(vel1, unit_normal);
+  float v2n = utils::dot(vel2, unit_normal);
+  float v1t = utils::dot(vel1, tangent);
+  float v2t = utils::dot(vel2, tangent);
+
+  float v1n_prime = (v1n * (m1 - m2) + 2 * m2 * v2n) / (m1 + m2);
+  float v2n_prime = (v2n * (m2 - m1) + 2 * m1 * v1n) / (m1 + m2);
+
+  particle1.setVelocity(tangent * v1t + unit_normal * v1n_prime); 
+  particle2.setVelocity(tangent * v2t + unit_normal * v2n_prime);
+}
+
+void ParticleSystem::handleParticleCollisions() {
+  for (size_t i = 0; i < particles.size(); i++) {
+    for (size_t j = i + 1; j < particles.size(); j++) {
+      if (&particles[i] == &particles[j]) continue;
+
+      if (checkCollision(particles[i], particles[j])) {
+        resolveCollision(particles[i], particles[j]);
+      }
+    }
+  }
 }
 
 void ParticleSystem::emit(int particleCount) {

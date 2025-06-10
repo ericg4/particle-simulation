@@ -85,8 +85,7 @@ int main() {
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
     particleSystem.setEmitterPosition(sf::Vector2f(mousePos.x, mousePos.y));
 
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
-    {
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
       particleSystem.emit(1);
     }
 

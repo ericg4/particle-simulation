@@ -14,6 +14,10 @@ class ParticleSystem {
     sf::Vector2f boundaryCenter;
     float boundaryRadius;
 
+    void handleParticleCollisions();
+    void resolveCollision(Particle& particle1, Particle& particle2);
+    bool checkCollision(const Particle& particle1, const Particle& particle2);
+
   public:
     ParticleSystem(sf::Vector2f position, sf::Vector2f boundaryCenter, float boundaryRadius);
 
