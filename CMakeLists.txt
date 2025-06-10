@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(ParticleSimulation)
 
-add_executable(particle_simulation src/main.cpp src/Particle.cpp src/ParticleSystem.cpp)
+add_executable(particle_simulation src/main.cpp src/Particle.cpp src/ParticleSystem.cpp src/utils/color.cpp)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
