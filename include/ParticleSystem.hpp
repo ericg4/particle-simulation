@@ -23,9 +23,11 @@ class ParticleSystem {
 
     void update(float dt);
     void render(sf::RenderTarget& target);
-    void emit(int particleCount);
-    void setEmitterPosition(const sf::Vector2f& position);
     void renderBoundary(sf::RenderTarget& target);
+
+    void emit(int particleCount, float dt);
+
+    void setEmitterPosition(const sf::Vector2f& position);
     void setGravityDirection(float angle);
 
     size_t getParticleCount() const;

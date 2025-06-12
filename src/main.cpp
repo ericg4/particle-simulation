@@ -85,10 +85,11 @@ int main() {
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
     particleSystem.setEmitterPosition(sf::Vector2f(mousePos.x, mousePos.y));
 
+    const float fixedDelta = 1.0f / 60.0f;
     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-      particleSystem.emit(1);
+      particleSystem.emit(1, fixedDelta);
     }
-
+    
     particleSystem.update(dt);
 
     std::string fpsString = "FPS: " + std::to_string(static_cast<int>(fps));

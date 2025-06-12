@@ -6,7 +6,7 @@
 #include <cstdint>
 
 constexpr float PI = 3.14159265358979323846f;
-const float GRAVITY_STRENGTH = 350.0f; // pixels / second^2
+const float GRAVITY_STRENGTH = 1000.0f; // pixels / second^2
 const float DEG_TO_RAD = 3.14159265f / 180.0f;
 
 ParticleSystem::ParticleSystem(sf::Vector2f position, sf::Vector2f center, float radius)
@@ -16,33 +16,38 @@ ParticleSystem::ParticleSystem(sf::Vector2f position, sf::Vector2f center, float
 void ParticleSystem::update(float dt) {
   emissionTime += dt;
 
-  sf::Vector2f gravityForce(std::cos(gravityDirection * DEG_TO_RAD) * GRAVITY_STRENGTH,
+  sf::Vector2f gravity(std::cos(gravityDirection * DEG_TO_RAD) * GRAVITY_STRENGTH,
     std::sin(gravityDirection * DEG_TO_RAD) * GRAVITY_STRENGTH);
 
-  for (auto& particle : particles)
-  {
-    particle.applyForce(gravityForce * particle.getMass());
-    particle.update(dt);
+  const int sub_steps = 4;
+  for (int i = 0; i < sub_steps; i++) {
+    float sub_dt = dt / sub_steps;
 
-    sf::Vector2f particlePos = particle.getPosition();
-    sf::Vector2f toParticle = particlePos - boundaryCenter;
-    float distance = utils::calcDistance(particlePos, boundaryCenter);
-
-    if (distance > boundaryRadius - particle.getRadius())
+    for (auto& particle : particles)
     {
-      sf::Vector2f normal = toParticle / distance;
+      particle.accelerate(gravity);
+      particle.update(sub_dt);
 
-      sf::Vector2f newPos = boundaryCenter + normal * (boundaryRadius - particle.getRadius());
-      particle.setPosition(newPos);
+      sf::Vector2f particlePos = particle.getPosition();
+      sf::Vector2f r = boundaryCenter - particlePos;
+      float distance = utils::calcLengthOfVector(r);
 
-      sf::Vector2f vel = particle.getVelocity();
-      float dotProduct = utils::dot(vel, normal);
-      sf::Vector2f reflection = vel - 2.0f * dotProduct * normal;
-      particle.setVelocity(reflection);
+      if (distance > boundaryRadius - particle.getRadius())
+      {
+        sf::Vector2f n = r / distance;
+        sf::Vector2f perp = sf::Vector2f(-n.y, n.x);
+        sf::Vector2f vel = particle.getVelocity();
+
+        particle.setPosition(boundaryCenter - n * (boundaryRadius - particle.getRadius()));
+        particle.setVelocity(2.0f * utils::dot(vel, perp) * perp - vel, 1.0f);
+      }
     }
   }
 
-  handleParticleCollisions();
+  // const int collisionIterations = 4;
+  // for (int i = 0; i < collisionIterations; i++) {
+  //   handleParticleCollisions();
+  // }
 }
 
 void ParticleSystem::render(sf::RenderTarget& target) {
@@ -71,63 +76,75 @@ bool ParticleSystem::checkCollision(const Particle& particle1, const Particle& p
   return distance < collisionDistance; // Use < instead of <= for cleaner detection
 }
 
-void ParticleSystem::resolveCollision(Particle& particle1, Particle& particle2) {
-  sf::Vector2f pos1 = particle1.getPosition();
-  sf::Vector2f pos2 = particle2.getPosition();
-  sf::Vector2f vel1 = particle1.getVelocity();
-  sf::Vector2f vel2 = particle2.getVelocity();
-  float m1 = particle1.getMass();
-  float m2 = particle2.getMass();
-  float r1 = particle1.getRadius();
-  float r2 = particle2.getRadius();
+// void ParticleSystem::resolveCollision(Particle& particle1, Particle& particle2) {
+//   sf::Vector2f pos1 = particle1.getPosition();
+//   sf::Vector2f pos2 = particle2.getPosition();
+//   sf::Vector2f vel1 = particle1.getVelocity();
+//   sf::Vector2f vel2 = particle2.getVelocity();
+//   float m1 = particle1.getMass();
+//   float m2 = particle2.getMass();
+//   float r1 = particle1.getRadius();
+//   float r2 = particle2.getRadius();
 
-  sf::Vector2f delta = pos2 - pos1;
-  float distance = utils::calcLengthOfVector(delta);
+//   sf::Vector2f delta = pos2 - pos1;
+//   float distance = utils::calcLengthOfVector(delta);
 
-  // Prevent division by zero and handle particles at same position
-  if (distance < 0.001f) {
-    // Create artificial separation for particles at same position
-    delta = sf::Vector2f(1.0f, 0.0f);
-    distance = 0.001f;
-  }
+//   // Prevent division by zero and handle particles at same position
+//   if (distance < 0.001f) {
+//     // Create artificial separation for particles at same position
+//     delta = sf::Vector2f(1.0f, 0.0f);
+//     distance = 0.001f;
+//   }
 
-  sf::Vector2f unit_normal = delta / distance;
-  sf::Vector2f tangent = sf::Vector2f(-unit_normal.y, unit_normal.x);
+//   sf::Vector2f unit_normal = delta / distance;
+//   sf::Vector2f tangent = sf::Vector2f(-unit_normal.y, unit_normal.x);
 
-  float overlap = (r1 + r2) - distance;
+//   float overlap = (r1 + r2) - distance;
 
-  // **CRITICAL: Separate overlapping particles**
-  if (overlap > 0.0f) {
-    sf::Vector2f separation = unit_normal * (overlap * 0.5f);
-    particle1.setPosition(pos1 - separation);
-    particle2.setPosition(pos2 + separation);
-  }
-  float v1n = utils::dot(vel1, unit_normal);
-  float v2n = utils::dot(vel2, unit_normal);
-  float v1t = utils::dot(vel1, tangent);
-  float v2t = utils::dot(vel2, tangent);
+//   // Separate overlapping particles
+//   if (overlap > 0.0f) {
+//     sf::Vector2f separation = unit_normal * (overlap * 0.5f + 0.1f);
+//     particle1.setPosition(pos1 - separation);
+//     particle2.setPosition(pos2 + separation);
+//   }
+//   float v1n = utils::dot(vel1, unit_normal);
+//   float v2n = utils::dot(vel2, unit_normal);
+//   float v1t = utils::dot(vel1, tangent);
+//   float v2t = utils::dot(vel2, tangent);
 
-  float v1n_prime = (v1n * (m1 - m2) + 2 * m2 * v2n) / (m1 + m2);
-  float v2n_prime = (v2n * (m2 - m1) + 2 * m1 * v1n) / (m1 + m2);
+//   float v1n_prime = (v1n * (m1 - m2) + 2 * m2 * v2n) / (m1 + m2);
+//   float v2n_prime = (v2n * (m2 - m1) + 2 * m1 * v1n) / (m1 + m2);
 
-  particle1.setVelocity(tangent * v1t + unit_normal * v1n_prime); 
-  particle2.setVelocity(tangent * v2t + unit_normal * v2n_prime);
-}
+//   float damping = 0.95f;
 
-void ParticleSystem::handleParticleCollisions() {
-  for (size_t i = 0; i < particles.size(); i++) {
-    for (size_t j = i + 1; j < particles.size(); j++) {
-      if (&particles[i] == &particles[j]) continue;
+//   float relVelAlongNormal = utils::dot(vel1 - vel2, unit_normal);
+//   // if (relVelAlongNormal < -0.01f) return;
 
-      if (checkCollision(particles[i], particles[j])) {
-        resolveCollision(particles[i], particles[j]);
-      }
-    }
-  }
-}
+//   sf::Vector2f newVel1 = tangent * v1t + unit_normal * v1n_prime * damping;
+//   sf::Vector2f newVel2 = tangent * v2t + unit_normal * v2n_prime * damping;
 
-void ParticleSystem::emit(int particleCount) {
-  float initialSpeed = 250.0f;
+//   if (utils::calcLengthOfVector(newVel1) < 1.0f) newVel1 = sf::Vector2f(0.0f, 0.0f);
+//   if (utils::calcLengthOfVector(newVel2) < 1.0f) newVel2 = sf::Vector2f(0.0f, 0.0f);
+
+//   particle1.setVelocity(newVel1);
+//   particle2.setVelocity(newVel2);
+// }
+
+// void ParticleSystem::handleParticleCollisions() {
+//   int num_objects = particles.size();
+//   for (int i = 0; i < num_objects; i++) {
+//     for (int j = i + 1; j < num_objects; j++) {
+//       if (i == j) continue;
+
+//       if (checkCollision(particles[i], particles[j])) {
+//         resolveCollision(particles[i], particles[j]);
+//       }
+//     }
+//   }
+// }
+
+void ParticleSystem::emit(int particleCount, float dt) {
+  float initialSpeed = 350.0f;
 
   float minAngle = 1.0f * PI / 6.0f;
   float maxAngle = 5.0f * PI / 6.0f;
@@ -147,7 +164,8 @@ void ParticleSystem::emit(int particleCount) {
     float hue = std::fmod(emissionTime * 60.0f, 360.0f);
     sf::Color color = utils::hsvToRgb(hue, 1.0f, 1.0f);
 
-    particles.emplace_back(emitterPosition, velocity, color, 5.0f);
+    sf::Vector2f past_pos = emitterPosition - velocity * dt;
+    particles.emplace_back(emitterPosition, past_pos, color, 5.0f);
   }
 }
 
